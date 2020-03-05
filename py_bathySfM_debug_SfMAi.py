@@ -179,7 +179,7 @@ def visibility(cam, footprints, targets):
     # calculate the coord. deltas between the cameras and the target
     dx = np.atleast_2d(cam.x.values) - np.atleast_2d(targets.x.values).T
     dy = np.atleast_2d(cam.y.values) - np.atleast_2d(targets.y.values).T
-    dz = np.atleast_2d(cam.z.values) - np.atleast_2d(targets.sfm_z).T
+    dz = np.atleast_2d(cam.z.values) - np.atleast_2d(targets.z.values).T
     
     # calc xy distance (d)
     d = np.sqrt((dx)**2+(dy)**2)
@@ -191,7 +191,6 @@ def visibility(cam, footprints, targets):
     r_filt[r_filt == 0] = np.nan
     
     if 'quality' in cam.columns:
-        print('foo')
         qual = cam.quality.values
         qual_mat = np.repeat(np.atleast_2d(qual),targets.shape[0],axis=0)
         qual_vis = qual_mat * vis
@@ -349,18 +348,19 @@ def timer(length,start_t):
 def main_prog():
     
     # CSV point cloud
-    target_file =  'D:/Dropbox/Python/py_sfm_depth_gui/pyBathySfM-20190626/sample_data/BathySfM_SamplePoints.csv'
+    target_file =  'D:/Dropbox/Python/SfMAI/data/Mochlos_dense.csv'
     
     # Camera Coords Exported from Metashape
-    cam_file = 'D:/Dropbox/Python/py_sfm_depth_gui/pyBathySfM-20190626/sample_data/BathySfM_SampleCameras.csv'
+    cam_file = 'D:/Dropbox/Python/SfMAI/data/mochlos_cams.csv'
+    
     # sensor paramater file
-    sensor_file = 'D:/Dropbox/Python/py_sfm_depth_gui/pyBathySfM-20190626/sample_data/sensor_DJI_Phantom4Pro.csv'
+    sensor_file = 'D:/Dropbox/Python/SfMAI/data/P3_sensor.csv'
     
     # output filename
-    outfile = 'D:/Dropbox/Python/py_sfm_depth_gui/pyBathySfM-20190626/sample_FOO_sfmAI.csv'
+    outfile = 'D:/Dropbox/Python/SfMAI/Mochlos_Test1.csv'
     
     # for a given dataset, the first run you can save the camera footprints (exportCam = True)
-    #   for subsequent testing set exportCam = False, precalcCam = True
+    #   for subsequent testing you can set exportCam = False, precalcCam = True
     #   pickle_file = path to exported pickle file
     exportCam = True
     precalcCam = False
@@ -470,12 +470,19 @@ def main_prog():
         tar_out['cam_count'] = np.count_nonzero(~np.isnan(cam_r),axis=1)
             
         # QUALITY
-        tar_out['cam_qual_mean'] = np.nanmean(cam_qual, axis = 1)
-        tar_out['cam_qual_median'] = np.nanmean(cam_qual, axis = 1)
-        tar_out['cam_qual_std'] = np.nanstd(cam_qual, axis = 1)
-        tar_out['cam_qual_min'] = np.nanmin(cam_qual, axis = 1)
-        tar_out['cam_qual_max'] = np.nanmax(cam_qual, axis = 1)
-        
+        if "quality" in cams.columns:
+            tar_out['cam_qual_mean'] = np.nanmean(cam_qual, axis = 1)
+            tar_out['cam_qual_median'] = np.nanmean(cam_qual, axis = 1)
+            tar_out['cam_qual_std'] = np.nanstd(cam_qual, axis = 1)
+            tar_out['cam_qual_min'] = np.nanmin(cam_qual, axis = 1)
+            tar_out['cam_qual_max'] = np.nanmax(cam_qual, axis = 1)
+        else:
+            tar_out['cam_qual_mean'] = 0
+            tar_out['cam_qual_median'] = 0
+            tar_out['cam_qual_std'] = 0
+            tar_out['cam_qual_min'] = 0
+            tar_out['cam_qual_max'] = 0
+            
         # Angle
         tar_out['cam_ang_mean'] = np.nanmean(cam_r, axis = 1)
         tar_out['cam_ang_median'] = np.nanmean(cam_r, axis = 1)
