@@ -187,8 +187,21 @@ def visibility(cam, footprints, targets):
     # calc inclination angle (r) from targets to cams
     r = np.rad2deg(np.arctan(d/dz))
     
+    # slope dist calc.
+    # cosine
+    SD = dz/np.cos(np.radians(r))
+    
+    # distance and slope dist * vis >> nan
+    
+    #filter r, d, and sd values by vis matrix
     r_filt = r * vis
     r_filt[r_filt == 0] = np.nan
+    
+    d_filt = d * vis
+    d_filt[d_filt == 0] = np.nan
+    
+    SD_filt = SD * vis
+    SD_filt[SD_filt == 0] = np.nan
     
     if 'quality' in cam.columns:
         qual = cam.quality.values
@@ -199,7 +212,7 @@ def visibility(cam, footprints, targets):
         qual_vis = np.zeros((targets.shape[0],cam.shape[0]))
         qual_vis[:] = np.nan
         
-    return r_filt, d, qual_vis
+    return r_filt, d_filt, SD_filt, qual_vis 
 
 #def correction(r, target, extras):
 #    """Performs the per camera refraction correction on a target point.
@@ -348,7 +361,7 @@ def timer(length,start_t):
 def main_prog():
     
     # CSV point cloud
-    target_file =  'D:/Dropbox/Python/SfMAI/data/Mochlos_dense.csv'
+    target_file =  'D:/Dropbox/Python/SfMAI/data/Mochlos_densesub_1-5mill.csv'
     
     # Camera Coords Exported from Metashape
     cam_file = 'D:/Dropbox/Python/SfMAI/data/mochlos_cams.csv'
@@ -357,7 +370,7 @@ def main_prog():
     sensor_file = 'D:/Dropbox/Python/SfMAI/data/P3_sensor.csv'
     
     # output filename
-    outfile = 'D:/Dropbox/Python/SfMAI/Mochlos_Test1.csv'
+    outfile = 'D:/Dropbox/Python/SfMAI/Mochlos_Test2.csv'
     
     # for a given dataset, the first run you can save the camera footprints (exportCam = True)
     #   for subsequent testing you can set exportCam = False, precalcCam = True
@@ -446,7 +459,7 @@ def main_prog():
             refract_start_time = datetime.now()
         
         # test the visability of target point based on the camera footprints
-        cam_r,cam_dist,cam_qual = visibility(cams,foot_prints,tar)
+        cam_r,cam_dist,cam_slpDist, cam_qual = visibility(cams,foot_prints,tar)
         
         # Save cam_R and for Debug targets
 #        if self.exportCam_box.isChecked():
@@ -491,12 +504,18 @@ def main_prog():
         tar_out['cam_ang_max'] = np.nanmax(cam_r, axis = 1)
         
         # Distance
-        tar_out['cam_dist_mean'] = np.nanmean(cam_dist, axis = 1)
-        tar_out['cam_dist_median'] = np.nanmean(cam_dist, axis = 1)
-        tar_out['cam_dist_std'] = np.nanstd(cam_dist, axis = 1)
-        tar_out['cam_dist_min'] = np.nanmin(cam_dist, axis = 1)
-        tar_out['cam_dist_max'] = np.nanmax(cam_dist, axis = 1)
+        tar_out['cam_xydist_mean'] = np.nanmean(cam_dist, axis = 1)
+        tar_out['cam_xydist_median'] = np.nanmean(cam_dist, axis = 1)
+        tar_out['cam_xydist_std'] = np.nanstd(cam_dist, axis = 1)
+        tar_out['cam_xydist_min'] = np.nanmin(cam_dist, axis = 1)
+        tar_out['cam_xydist_max'] = np.nanmax(cam_dist, axis = 1)
         
+        #slope distance
+        tar_out['cam_slpDist_mean'] = np.nanmean(cam_slpDist, axis = 1)
+        tar_out['cam_slpDist_median'] = np.nanmean(cam_slpDist, axis = 1)
+        tar_out['cam_slpDist_std'] = np.nanstd(cam_slpDist, axis = 1)
+        tar_out['cam_slpDist_min'] = np.nanmin(cam_slpDist, axis = 1)
+        tar_out['cam_slpDist_max'] = np.nanmax(cam_slpDist, axis = 1)
         
         # DEBUG export
 #        if extraOpt[2]:
